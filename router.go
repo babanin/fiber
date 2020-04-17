@@ -5,9 +5,11 @@
 package fiber
 
 import (
+	"bytes"
 	"log"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	fasthttp "github.com/valyala/fasthttp"
@@ -185,7 +187,7 @@ func (app *App) registerMethod(method, path string, handlers ...func(*Ctx)) {
 	}
 }
 
-func (app *App) registerStatic(prefix, root string, config ...Static) {
+func (app *App) registerStatic(prefix, pattern string, config ...Static) {
 	// Cannot have an empty prefix
 	if prefix == "" {
 		prefix = "/"
@@ -205,12 +207,12 @@ func (app *App) registerStatic(prefix, root string, config ...Static) {
 		prefix = strings.ToLower(prefix)
 	}
 	// For security we want to restrict to the current work directory.
-	if len(root) == 0 {
-		root = "."
+	if len(pattern) == 0 {
+		pattern = "."
 	}
 	// Strip trailing slashes from the root path
-	if len(root) > 0 && root[len(root)-1] == '/' {
-		root = root[:len(root)-1]
+	if len(pattern) > 0 && pattern[len(pattern)-1] == '/' {
+		pattern = pattern[:len(pattern)-1]
 	}
 	// isSlash ?
 	var isSlash = prefix == "/"
@@ -222,7 +224,55 @@ func (app *App) registerStatic(prefix, root string, config ...Static) {
 	if isSlash {
 		stripper = 0
 	}
-	// Fileserver settings
+
+	tmpl, err := template.New("directoryPattern").Parse(pattern)
+	if err != nil {
+		panic(err)
+	}
+
+	fileHandlerByPath := make(map[string]fasthttp.RequestHandler)
+
+	app.routes = append(app.routes, &Route{
+		isMiddleware: true,
+		isSlash:      isSlash,
+		Method:       "*",
+		Path:         prefix,
+		Handler: func(c *Ctx) {
+			// Only handle GET & HEAD methods
+			if c.method == "GET" || c.method == "HEAD" {
+				// Do stuff
+				if wildcard {
+					c.Fasthttp.Request.SetRequestURI(prefix)
+				}
+
+				var tpl bytes.Buffer
+				execErr := tmpl.Execute(&tpl, c)
+				if execErr != nil {
+					panic(execErr)
+				}
+
+				root := tpl.String()
+				handler, handlerExist := fileHandlerByPath[root]
+				if !handlerExist {
+					handler = createHandler(root, stripper, config...)
+					fileHandlerByPath[root] = handler
+				}
+
+				// Serve file
+				handler(c.Fasthttp)
+				// End response when file is found
+				if c.Fasthttp.Response.StatusCode() != 404 {
+					return
+				}
+				// Reset response
+				c.Fasthttp.Response.Reset()
+			}
+			c.Next()
+		},
+	})
+}
+
+func createHandler(root string, stripper int, config ...Static) fasthttp.RequestHandler {
 	fs := &fasthttp.FS{
 		Root:                 root,
 		GenerateIndexPages:   false,
@@ -246,29 +296,6 @@ func (app *App) registerStatic(prefix, root string, config ...Static) {
 			fs.IndexNames = []string{config[0].Index}
 		}
 	}
-	fileHandler := fs.NewRequestHandler()
-	app.routes = append(app.routes, &Route{
-		isMiddleware: true,
-		isSlash:      isSlash,
-		Method:       "*",
-		Path:         prefix,
-		Handler: func(c *Ctx) {
-			// Only handle GET & HEAD methods
-			if c.method == "GET" || c.method == "HEAD" {
-				// Do stuff
-				if wildcard {
-					c.Fasthttp.Request.SetRequestURI(prefix)
-				}
-				// Serve file
-				fileHandler(c.Fasthttp)
-				// End response when file is found
-				if c.Fasthttp.Response.StatusCode() != 404 {
-					return
-				}
-				// Reset response
-				c.Fasthttp.Response.Reset()
-			}
-			c.Next()
-		},
-	})
+
+	return fs.NewRequestHandler()
 }

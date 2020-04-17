@@ -1,4 +1,4 @@
-module github.com/gofiber/fiber
+module github.com/babanin/fiber
 
 go 1.11
 
