@@ -1,3 +1,13 @@
+###Diff with upstream
+
+Allow using templates as *root* parameter in *Static(prefix, **root**)*.
+It might be useful, if you need to serve separate static folders per each virtual domain, e.g:
+```go
+// fiber.Ctx structure passed as context for template
+app.Static("/*", "static/{{.Hostname}}")
+```
+
+---
 <p align="center">
   <a href="https://fiber.wiki">
     <img alt="Fiber" height="125" src="https://github.com/gofiber/docs/blob/master/static/fiber_v2_logo.svg">
@@ -134,13 +144,13 @@ We **listen** to our users in [issues](https://github.com/gofiber/fiber/issues) 
 
 ## 👀 Examples
 
-Listed below are some of the common examples. 
+Listed below are some of the common examples.
 
 > If you want to see more code examples, please visit our [Recipes repository](https://github.com/gofiber/recipes) or visit our [API documentation](https://fiber.wiki).
 
 ### Routing
 
-📖 https://fiber.wiki/#basic-routing  
+📖 https://fiber.wiki/#basic-routing
 
 
 ```go
@@ -171,7 +181,7 @@ func main() {
 
 ### Serve static files
 
-📖 https://fiber.wiki/application#static  
+📖 https://fiber.wiki/application#static
 
 ```go
 func main() {
@@ -194,8 +204,8 @@ func main() {
 
 ### Middleware & Next
 
-📖 https://fiber.wiki/routing#middleware  
-📖 https://fiber.wiki/context#next  
+📖 https://fiber.wiki/routing#middleware
+📖 https://fiber.wiki/context#next
 
 ```go
 func main() {
@@ -228,9 +238,9 @@ func main() {
 
 ### Template engines
 
-📖 https://fiber.wiki/application#settings  
-📖 https://fiber.wiki/context#render  
-📖 https://fiber.wiki/middleware#template  
+📖 https://fiber.wiki/application#settings
+📖 https://fiber.wiki/context#render
+📖 https://fiber.wiki/middleware#template
 
 Fiber supports the default [Go template engine](https://golang.org/pkg/html/template/)
 
@@ -273,7 +283,7 @@ func main() {
 
 ### Grouping routes into chains
 
-📖 https://fiber.wiki/application#group  
+📖 https://fiber.wiki/application#group
 
 ```go
 func main() {
@@ -298,7 +308,7 @@ func main() {
 
 ### Middleware logger
 
-📖 https://fiber.wiki/middleware#logger  
+📖 https://fiber.wiki/middleware#logger
 
 ```go
 import (
@@ -324,7 +334,7 @@ func main() {
 
 ### Cross-Origin Resource Sharing (CORS)
 
-📖 https://fiber.wiki/middleware#cors  
+📖 https://fiber.wiki/middleware#cors
 
 ```go
 import (
@@ -350,7 +360,7 @@ curl -H "Origin: http://example.com" --verbose http://localhost:3000
 
 ### Custom 404 response
 
-📖 https://fiber.wiki/application#http-methods  
+📖 https://fiber.wiki/application#http-methods
 
 ```go
 func main() {
@@ -368,7 +378,7 @@ func main() {
 
   // Last middleware to match anything
   app.Use(func(c *fiber.Ctx) {
-    c.SendStatus(404) 
+    c.SendStatus(404)
     // => 404 "Not Found"
   })
 
@@ -378,7 +388,7 @@ func main() {
 
 ### JSON Response
 
-📖 https://fiber.wiki/context#json  
+📖 https://fiber.wiki/context#json
 
 ```go
 type User struct {
@@ -408,7 +418,7 @@ func main() {
 
 ### WebSocket Upgrade
 
-📖 https://fiber.wiki/middleware#websocket  
+📖 https://fiber.wiki/middleware#websocket
 
 ```go
 import (
@@ -442,7 +452,7 @@ func main() {
 
 ### Recover middleware
 
-📖 https://fiber.wiki/middleware#recover  
+📖 https://fiber.wiki/middleware#recover
 
 ```go
 import (
